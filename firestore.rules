@@ -17,5 +17,16 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if true;
     }
+
+    // Photo queue — lượt chụp ảnh lễ trưởng thành
+    match /photo_queue/{entryId} {
+      allow read, create: if true;
+      allow update: if true;
+    }
+
+    // Queue state — trạng thái hiện tại của hàng chờ
+    match /settings/{docId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Wizard from '@/components/wizard/Wizard';
+import NameGate from '@/components/shared/NameGate';
 import {
   YearbookHeroCluster,
   GradCap,
@@ -32,10 +33,28 @@ import type { CardType } from '@/lib/firestore';
 export default function HomePage() {
   const [open, setOpen] = useState(false);
   const [initialType, setInitialType] = useState<CardType | undefined>();
+  const [ownerName, setOwnerName] = useState<string>('');
+  const [gateOpen, setGateOpen] = useState(false);
+  const [pendingType, setPendingType] = useState<CardType | undefined>();
   const wizardRef = useRef<HTMLDivElement>(null);
 
   function start(type?: CardType) {
+    if (!ownerName) {
+      setPendingType(type);
+      setGateOpen(true);
+      return;
+    }
     setInitialType(type);
+    setOpen(true);
+    setTimeout(() => {
+      wizardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function handleGatePass(name: string) {
+    setOwnerName(name);
+    setGateOpen(false);
+    setInitialType(pendingType);
     setOpen(true);
     setTimeout(() => {
       wizardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -77,15 +96,10 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="mt-10 text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-yearbook-gold/20 border border-yearbook-gold/50 text-yearbook-gold mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
-              ƯU TIÊN KỶ YẾU 2026
-            </div>
 
             <h1 className="font-serif text-5xl sm:text-6xl font-bold text-yearbook-cream leading-[1.05]">
               Thiệp <span className="text-yearbook-gold text-shadow-gold whitespace-nowrap">Kỷ Yếu</span>
               <br />
-              cho lớp mình
             </h1>
             <p className="mt-4 text-base text-yearbook-cream/85 max-w-sm mx-auto">
               Tạo thiệp mời đêm gala, họp lớp, ra trường siêu đẹp trong 2 phút.
@@ -329,7 +343,11 @@ export default function HomePage() {
         <div className="max-w-md mx-auto px-5 py-10">
           {open ? (
             <div className="rounded-3xl bg-white shadow-xl border border-gray-200 p-5 sm:p-6">
-              <Wizard initialType={initialType} onClose={() => setOpen(false)} />
+              <Wizard
+                initialType={initialType}
+                ownerName={ownerName}
+                onClose={() => setOpen(false)}
+              />
             </div>
           ) : (
             <div className="text-center">
@@ -361,6 +379,14 @@ export default function HomePage() {
           <p className="mt-2 text-yearbook-cream/50">Made with ♥ in Vietnam · 2026</p>
         </div>
       </footer>
+
+      <NameGate
+        open={gateOpen}
+        title="Nhập tên để tạo thiệp"
+        description="Để tạo thiệp, hãy nhập tên đã được admin cấp cho bạn."
+        onCancel={() => setGateOpen(false)}
+        onPass={handleGatePass}
+      />
     </main>
   );
 }

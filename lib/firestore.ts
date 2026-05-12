@@ -2,11 +2,32 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  query,
+  orderBy,
   addDoc,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
 import { getDb } from './firebase';
+
+export interface RsvpRecord {
+  id: string;
+  name: string;
+  attending: boolean;
+  message?: string;
+  createdAt?: Timestamp;
+}
+
+export async function listRsvps(cardId: string): Promise<RsvpRecord[]> {
+  const db = getDb();
+  const q = query(
+    collection(db, 'cards', cardId, 'rsvp'),
+    orderBy('createdAt', 'desc'),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<RsvpRecord, 'id'>) }));
+}
 
 export type CardType = 'yearbook' | 'wedding' | 'birthday';
 
@@ -34,6 +55,8 @@ export interface CardData {
   content: CardContent;
   imageUrl?: string;
   gallery?: string[];
+  /** Tên chủ thiệp — dùng để gate xem RSVP. Khớp với users collection. */
+  ownerName?: string;
   createdAt?: Timestamp;
 }
 
@@ -81,3 +104,4 @@ export async function addRsvp(cardId: string, entry: Omit<RsvpEntry, 'createdAt'
   });
   return ref.id;
 }
+

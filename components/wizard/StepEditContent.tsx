@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Link2, X, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ArrowLeft, ArrowRight, Link2, X, Plus, Upload, Loader2 } from 'lucide-react';
 import type { CardContent, CardType } from '@/lib/firestore';
+import { uploadImage, uploadImages } from '@/lib/storage';
 
 interface Props {
   type: CardType;
@@ -29,6 +30,11 @@ export default function StepEditContent({
 }: Props) {
   const [membersInput, setMembersInput] = useState((content.members ?? []).join(', '));
   const [galleryInput, setGalleryInput] = useState('');
+  const [mainUploading, setMainUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const mainFileRef = useRef<HTMLInputElement>(null);
+  const galleryFileRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof CardContent>(key: K, value: CardContent[K]) {
     onChange({ ...content, [key]: value });
@@ -44,6 +50,41 @@ export default function StepEditContent({
 
   function removeGallery(i: number) {
     onGalleryUrls(galleryUrls.filter((_, idx) => idx !== i));
+  }
+
+  async function handleMainUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadError(null);
+    setMainUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onImageUrl(url);
+    } catch (err: any) {
+      setUploadError(err?.message ?? 'Upload thất bại');
+    } finally {
+      setMainUploading(false);
+    }
+  }
+
+  async function handleGalleryUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    const room = 12 - galleryUrls.length;
+    if (room <= 0) return;
+    const chosen = files.slice(0, room);
+    setUploadError(null);
+    setGalleryUploading(true);
+    try {
+      const urls = await uploadImages(chosen);
+      onGalleryUrls([...galleryUrls, ...urls]);
+    } catch (err: any) {
+      setUploadError(err?.message ?? 'Upload thất bại');
+    } finally {
+      setGalleryUploading(false);
+    }
   }
 
   function commitMembers() {
@@ -93,48 +134,15 @@ export default function StepEditContent({
       </div>
 
       {type === 'yearbook' && (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Lớp / Sĩ số</label>
-              <input
-                className="input-field"
-                value={content.className ?? ''}
-                onChange={(e) => set('className', e.target.value)}
-                placeholder="12A1"
-              />
-            </div>
-            <div>
-              <label className="label">Niên khoá</label>
-              <input
-                className="input-field"
-                value={content.schoolYear ?? ''}
-                onChange={(e) => set('schoolYear', e.target.value)}
-                placeholder="2022-2025"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="label">Trường</label>
-            <input
-              className="input-field"
-              value={content.schoolName ?? ''}
-              onChange={(e) => set('schoolName', e.target.value)}
-              placeholder="THPT Chu Văn An"
-            />
-          </div>
-          <div>
-            <label className="label">Danh sách thành viên (tách bằng dấu phẩy)</label>
-            <textarea
-              className="input-field resize-none"
-              rows={3}
-              value={membersInput}
-              onChange={(e) => setMembersInput(e.target.value)}
-              onBlur={commitMembers}
-              placeholder="Bảo Anh, Minh Đức, Hồng Hà, Tuấn Kiệt..."
-            />
-          </div>
-        </>
+        <div>
+          <label className="label">Trường</label>
+          <input
+            className="input-field"
+            value={content.schoolName ?? ''}
+            onChange={(e) => set('schoolName', e.target.value)}
+            placeholder="THPT Chu Văn An"
+          />
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-3">
@@ -193,19 +201,40 @@ export default function StepEditContent({
         />
       </div>
 
-      {/* Main image URL */}
+      {/* Main image */}
       <div>
-        <label className="label">Ảnh đại diện (URL)</label>
-        <div className="relative">
-          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            className="input-field pl-10"
-            value={imageUrl}
-            onChange={(e) => onImageUrl(e.target.value)}
-            placeholder="https://i.imgur.com/abc.jpg"
-            type="url"
-          />
+        <label className="label">Ảnh đại diện</label>
+
+        <input
+          ref={mainFileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleMainUpload}
+        />
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => mainFileRef.current?.click()}
+            disabled={mainUploading}
+            className="shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-3 bg-yearbook-navy text-white text-sm font-semibold active:scale-95 transition disabled:opacity-60"
+          >
+            {mainUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {mainUploading ? 'Đang tải...' : 'Tải ảnh lên'}
+          </button>
+          <div className="relative flex-1">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              className="input-field pl-10"
+              value={imageUrl}
+              onChange={(e) => onImageUrl(e.target.value)}
+              placeholder="hoặc dán URL ảnh"
+              type="url"
+            />
+          </div>
         </div>
+
         {imageUrl && (
           <div className="mt-3 relative w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 border-2 border-gray-200">
             <img
@@ -226,21 +255,40 @@ export default function StepEditContent({
           </div>
         )}
         <p className="text-xs text-gray-500 mt-1">
-          Dán link ảnh từ Imgur, Postimg, hoặc Google Photos (đã share public)
+          Bấm "Tải ảnh lên" để upload từ máy, hoặc dán URL ảnh có sẵn
         </p>
       </div>
 
-      {/* Gallery URLs */}
+      {/* Gallery */}
       <div>
-        <label className="label">Album ảnh — danh sách URL (tối đa 12)</label>
+        <label className="label">Album ảnh (tối đa 12)</label>
+
+        <input
+          ref={galleryFileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={handleGalleryUpload}
+        />
+
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => galleryFileRef.current?.click()}
+            disabled={galleryUploading || galleryUrls.length >= 12}
+            className="shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-3 bg-yearbook-navy text-white text-sm font-semibold active:scale-95 transition disabled:opacity-60"
+          >
+            {galleryUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {galleryUploading ? 'Đang tải...' : 'Tải nhiều ảnh'}
+          </button>
           <div className="relative flex-1">
             <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               className="input-field pl-10"
               value={galleryInput}
               onChange={(e) => setGalleryInput(e.target.value)}
-              placeholder="Dán link ảnh, bấm +"
+              placeholder="hoặc dán URL, bấm +"
               type="url"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -254,7 +302,7 @@ export default function StepEditContent({
             type="button"
             onClick={addGalleryUrl}
             disabled={!galleryInput.trim() || galleryUrls.length >= 12}
-            className="shrink-0 w-12 rounded-2xl bg-yearbook-navy text-white flex items-center justify-center active:scale-95 transition disabled:opacity-40"
+            className="shrink-0 w-12 rounded-2xl bg-gray-700 text-white flex items-center justify-center active:scale-95 transition disabled:opacity-40"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -283,6 +331,10 @@ export default function StepEditContent({
               </div>
             ))}
           </div>
+        )}
+
+        {uploadError && (
+          <p className="text-xs text-red-600 mt-2">⚠️ {uploadError}</p>
         )}
       </div>
 

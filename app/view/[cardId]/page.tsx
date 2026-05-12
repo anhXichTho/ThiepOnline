@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { getCard, type CardData } from '@/lib/firestore';
 import { renderTemplate } from '@/components/templates';
 import CardActions from '@/components/shared/CardActions';
+import NameGate from '@/components/shared/NameGate';
+import RsvpListModal from '@/components/shared/RsvpListModal';
 
 export default function ViewCardPage() {
   const params = useParams();
@@ -16,6 +18,8 @@ export default function ViewCardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [splashDone, setSplashDone] = useState(false);
+  const [rsvpGateOpen, setRsvpGateOpen] = useState(false);
+  const [rsvpListOpen, setRsvpListOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +120,16 @@ export default function ViewCardPage() {
 
       {/* Floating action bar */}
       <div className="fixed left-0 right-0 bottom-0 z-40 pointer-events-none">
-        <div className="max-w-md mx-auto px-5 pb-5 pointer-events-auto">
+        <div className="max-w-md mx-auto px-5 pb-5 pointer-events-auto space-y-2">
+          {data.ownerName && (
+            <button
+              onClick={() => setRsvpGateOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3 bg-white/15 backdrop-blur-2xl border border-white/25 text-white text-sm font-semibold active:scale-95 transition"
+            >
+              <ClipboardList className="w-4 h-4" />
+              Xem danh sách xác nhận tham gia
+            </button>
+          )}
           <div className="rounded-3xl bg-black/40 backdrop-blur-2xl border border-white/15 p-3">
             <CardActions
               targetSelector="#card-capture"
@@ -127,7 +140,28 @@ export default function ViewCardPage() {
         </div>
       </div>
 
-      <div className="h-48" aria-hidden />
+      <div className="h-56" aria-hidden />
+
+      {data.ownerName && data.id && (
+        <>
+          <NameGate
+            open={rsvpGateOpen}
+            title="Xem danh sách xác nhận"
+            description={`Nhập tên người tạo thiệp để xem ai đã RSVP.`}
+            expectedName={data.ownerName}
+            onCancel={() => setRsvpGateOpen(false)}
+            onPass={() => {
+              setRsvpGateOpen(false);
+              setRsvpListOpen(true);
+            }}
+          />
+          <RsvpListModal
+            open={rsvpListOpen}
+            cardId={data.id}
+            onClose={() => setRsvpListOpen(false)}
+          />
+        </>
+      )}
     </main>
   );
 }

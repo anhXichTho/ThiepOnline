@@ -12,12 +12,13 @@ interface Props {
   content: CardContent;
   imageUrl: string;
   galleryUrls: string[];
+  ownerName?: string;
   onBack: () => void;
 }
 
 type Phase = 'idle' | 'saving' | 'done' | 'error';
 
-export default function StepShare({ type, templateId, content, imageUrl, galleryUrls, onBack }: Props) {
+export default function StepShare({ type, templateId, content, imageUrl, galleryUrls, ownerName, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [cardId, setCardId] = useState<string | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export default function StepShare({ type, templateId, content, imageUrl, gallery
           content,
           imageUrl: imageUrl.trim() || undefined,
           gallery: galleryUrls.length > 0 ? galleryUrls : undefined,
+          ownerName: ownerName?.trim() || undefined,
         });
         if (cancelled) return;
 

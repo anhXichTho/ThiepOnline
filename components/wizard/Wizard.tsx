@@ -11,6 +11,7 @@ import { X } from 'lucide-react';
 
 interface Props {
   initialType?: CardType;
+  ownerName?: string;
   onClose?: () => void;
 }
 
@@ -24,7 +25,7 @@ const EMPTY: CardContent = {
   members: [],
 };
 
-export default function Wizard({ initialType, onClose }: Props) {
+export default function Wizard({ initialType, ownerName, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(initialType ? 2 : 1);
   const [type, setType] = useState<CardType | undefined>(initialType);
   const [templateId, setTemplateId] = useState<string | undefined>();
@@ -106,6 +107,7 @@ export default function Wizard({ initialType, onClose }: Props) {
               content={content}
               imageUrl={imageUrl}
               galleryUrls={galleryUrls}
+              ownerName={ownerName}
               onBack={() => setStep(3)}
             />
           )}

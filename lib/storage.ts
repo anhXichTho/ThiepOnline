@@ -1,16 +1,31 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getStorageRef } from './firebase';
+const IMGBB_ENDPOINT = 'https://api.imgbb.com/1/upload';
 
-export async function uploadImage(file: File, folder = 'cards'): Promise<string> {
-  const storage = getStorageRef();
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${file.name}`;
-  const path = `${folder}/${filename}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  return await getDownloadURL(storageRef);
+function getApiKey(): string {
+  const key = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+  if (!key) throw new Error('Thiếu NEXT_PUBLIC_IMGBB_API_KEY trong .env.local');
+  return key;
 }
 
-export async function uploadImages(files: File[], folder = 'cards'): Promise<string[]> {
-  const results = await Promise.all(files.map((f) => uploadImage(f, folder)));
-  return results;
+export async function uploadImage(file: File): Promise<string> {
+  const key = getApiKey();
+  const form = new FormData();
+  form.append('image', file);
+  form.append('name', file.name.replace(/\.[^.]+$/, '').slice(0, 40));
+
+  const res = await fetch(`${IMGBB_ENDPOINT}?key=${encodeURIComponent(key)}`, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) {
+    throw new Error(`Upload thất bại (${res.status})`);
+  }
+  const json = await res.json();
+  if (!json?.data?.url) {
+    throw new Error('ImgBB không trả về URL ảnh');
+  }
+  return json.data.url as string;
+}
+
+export async function uploadImages(files: File[]): Promise<string[]> {
+  return Promise.all(files.map((f) => uploadImage(f)));
 }

@@ -10,5 +10,12 @@ service cloud.firestore {
         allow read, create: if true;
       }
     }
+
+    // Danh sách tên người dùng được cấp bởi admin.
+    // ưu tí: ai cũng có thể đọc (để verify tên), nhưng ghi/xóa không bị hạn chế
+    //         vì auth admin là client-side. Cho production nên thêm Firebase Auth.
+    match /users/{userId} {
+      allow read, write: if true;
+    }
   }
 }

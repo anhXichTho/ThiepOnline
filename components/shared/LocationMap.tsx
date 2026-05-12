@@ -12,10 +12,6 @@ interface Props {
 
 export default function LocationMap({ location, lat, lng, accent = '#E5B73B', textOnDark = true }: Props) {
   const query = encodeURIComponent(location);
-  const mapSrc =
-    lat && lng
-      ? `https://www.google.com/maps?q=${lat},${lng}&hl=vi&z=15&output=embed`
-      : `https://www.google.com/maps?q=${query}&hl=vi&z=14&output=embed`;
   const directionUrl =
     lat && lng
       ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
@@ -42,44 +38,29 @@ export default function LocationMap({ location, lat, lng, accent = '#E5B73B', te
         </div>
       </div>
 
-      <div className="relative h-64 sm:h-72 bg-gray-200">
-        <iframe
-          src={mapSrc}
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          allowFullScreen
-        />
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="relative">
-            <span
-              className="absolute -inset-3 rounded-full animate-ping opacity-50"
-              style={{ backgroundColor: accent }}
-            />
-            <span
-              className="relative block w-7 h-7 rounded-full ring-4 ring-white shadow-lg flex items-center justify-center"
-              style={{ backgroundColor: accent }}
-            >
-              <MapPin className="w-4 h-4 text-white" />
-            </span>
+      <div className="px-5 py-5">
+        <div className="flex items-start gap-3">
+          <span
+            className="shrink-0 mt-0.5 w-9 h-9 rounded-full ring-4 flex items-center justify-center"
+            style={{ backgroundColor: accent, boxShadow: `0 0 0 4px ${textOnDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.7)'}` }}
+          >
+            <MapPin className="w-5 h-5 text-white" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className={`text-[11px] uppercase tracking-widest ${dim}`}>Tới địa điểm</p>
+            <p className={`text-base font-semibold leading-snug mt-0.5 ${strong}`}>{location}</p>
           </div>
         </div>
-      </div>
 
-      <div className="px-5 py-4">
-        <p className={`text-xs uppercase tracking-widest ${dim}`}>Tới địa điểm</p>
-        <p className={`text-base font-semibold ${strong} mt-1 line-clamp-2`}>{location}</p>
         <a
           href={directionUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform active:scale-95"
+          className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white transition-transform active:scale-95"
           style={{ backgroundColor: accent }}
         >
           <Navigation className="w-4 h-4" />
-          Chỉ đường
+          Chỉ đường qua Google Maps
         </a>
       </div>
     </div>

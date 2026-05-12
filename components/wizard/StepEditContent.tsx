@@ -154,8 +154,13 @@ export default function StepEditContent({
             value={content.eventDate ? content.eventDate.slice(0, 10) : ''}
             onChange={(e) => {
               const date = e.target.value;
+              if (!date) return;
               const time = content.eventTime || '19:00';
-              if (date) set('eventDate', `${date}T${time}:00`);
+              onChange({
+                ...content,
+                eventDate: `${date}T${time}:00`,
+                eventTime: time,
+              });
             }}
           />
         </div>
@@ -167,11 +172,12 @@ export default function StepEditContent({
             value={content.eventTime ?? '19:00'}
             onChange={(e) => {
               const time = e.target.value;
-              set('eventTime', time);
-              if (content.eventDate) {
-                const datePart = content.eventDate.slice(0, 10);
-                set('eventDate', `${datePart}T${time}:00`);
-              }
+              const datePart = content.eventDate ? content.eventDate.slice(0, 10) : '';
+              onChange({
+                ...content,
+                eventTime: time,
+                eventDate: datePart ? `${datePart}T${time}:00` : content.eventDate,
+              });
             }}
           />
         </div>

@@ -150,10 +150,11 @@ export default function HomePage() {
 
         {/* Wave decoration */}
         <svg
-          className="absolute bottom-0 left-0 right-0 w-full"
+          className="absolute bottom-0 left-0 right-0 w-full h-[60px] pointer-events-none"
           viewBox="0 0 400 60"
           preserveAspectRatio="none"
           fill="#FFF8E7"
+          aria-hidden
         >
           <path d="M0 30 Q100 0 200 30 T400 30 V60 H0 Z" />
         </svg>

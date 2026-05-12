@@ -115,7 +115,7 @@ export const ScrollRibbon = ({ className = 'w-full' }: { className?: string }) =
  * Hero cluster - a styled arrangement of yearbook icons
  */
 export const YearbookHeroCluster = () => (
-  <div className="relative w-full h-72 sm:h-96">
+  <div className="relative w-full h-72 sm:h-96 pointer-events-none select-none" aria-hidden>
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="relative w-72 h-72">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 animate-float">

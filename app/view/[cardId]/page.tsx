@@ -118,9 +118,9 @@ export default function ViewCardPage() {
         })}
       </div>
 
-      {/* Floating action bar */}
-      <div className="fixed left-0 right-0 bottom-0 z-40 pointer-events-none">
-        <div className="max-w-md mx-auto px-5 pb-5 pointer-events-auto space-y-2">
+      {/* Action bar — bottom of page (normal flow) */}
+      <div className="bg-yearbook-navy">
+        <div className="max-w-md mx-auto px-5 pt-5 pb-8 space-y-2">
           {data.ownerName && (
             <button
               onClick={() => setRsvpGateOpen(true)}
@@ -130,7 +130,7 @@ export default function ViewCardPage() {
               Xem danh sách xác nhận tham gia
             </button>
           )}
-          <div className="rounded-3xl bg-black/40 backdrop-blur-2xl border border-white/15 p-3">
+          <div className="rounded-3xl bg-black/30 backdrop-blur-2xl border border-white/15 p-3">
             <CardActions
               targetSelector="#card-capture"
               shareTitle={data.content.title}
@@ -140,14 +140,12 @@ export default function ViewCardPage() {
         </div>
       </div>
 
-      <div className="h-56" aria-hidden />
-
       {data.ownerName && data.id && (
         <>
           <NameGate
             open={rsvpGateOpen}
             title="Xem danh sách xác nhận"
-            description={`Nhập tên người tạo thiệp để xem ai đã RSVP.`}
+            description="Nhập tên người tạo thiệp để xem ai đã RSVP."
             expectedName={data.ownerName}
             onCancel={() => setRsvpGateOpen(false)}
             onPass={() => {
